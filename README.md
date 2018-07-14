@@ -25,6 +25,7 @@ Since we are sharing a single GCP project, we can avoid stepping on each other's
 | Houston   | houston-             | 10.10.0.0/24   |
 | Bangalore | bangalore-           | 192.168.0.0/24 |
 | Flohio    | flohio-              | 172.16.0.0/24  |
+| Nishant   | ngm-                 | 10.5.0.0./24   |
 
 In addition, if you want to create your own clusters, feel free to use any prefix and subnet you like as long as it doesn't clash with the above and update the table above.
 

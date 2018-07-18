@@ -18,7 +18,8 @@ Everything we need to know to effectively use Google Compute Platform.
 
 ### Project Conventions
 Since we are sharing a single GCP project, we can avoid stepping on each other's toes if we follow some simple conventions for naming our instances and subnet addressing. 
-If you name everything with the same prefix, you can cleanup your entire infrastructure with a single command by using the script [delete-all-resources.sh](scripts/gcloud/delete-instances.sh scripts/gcloud/delete-all-resources.sh)
+If you name everything with the same prefix, you can cleanup your entire infrastructure with a single command by using the script [delete-all-resources.sh](scripts/gcloud/delete-all-resources.sh)
+
 
 | Team      | Instance Name Prefix | Subnet CIDR    | Controller Manager CIDR |
 |-----------|----------------------|----------------|-------------------------|
@@ -29,6 +30,4 @@ If you name everything with the same prefix, you can cleanup your entire infrast
 | Nishant   | ngm-                 | 10.5.0.0./24   | 10.50.0.0/16            |
 
 In addition, if you want to create your own clusters, feel free to use any prefix and subnet you like as long as it doesn't clash with the above and update the table above.
-
-
 

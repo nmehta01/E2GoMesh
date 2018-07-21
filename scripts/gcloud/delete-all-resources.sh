@@ -71,9 +71,4 @@ if [[  $proceed = "y" ]];then
         gcloud compute addresses delete $ip --quiet
     done
 
-
 fi 
-
-
-
-

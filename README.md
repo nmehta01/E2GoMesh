@@ -37,8 +37,12 @@ In addition, if you want to create your own clusters, feel free to use any prefi
 This is an interactive script that can quickly do the following:
  * Provision 6 VMs on the Google Compute Platform (3 workers, 3 controllers)
  * Setup a Kubernetes cluster step-by-step so you can see the various different components of Kubernetes
- * Coming soon: 
-    * The ability to setup a cluster on any arbitrary hardware (most of the work for this is done already).
-    * The ability to resume cluster setup if one of the steps went awry (most of the work for this is done already).
+ ### Coming soon (most of the work done already): 
+    The ability to setup a cluster on any arbitrary hardware.
+    The ability to resume cluster setup if one of the steps went awry.
+### Wishlist (work not started on this):
+    Install docker and deploy the Book Info app.
+    Deploy service-mesh to the cluster.
+     
 ## [delete-all-resources.sh](scripts/delete-all-resources.sh)
 Simple script that takes as an argument a regex and deletes all resources matching that regex (don't worry, it tells you exactly what it will delete and ask for confirmation). If you used a prefix to provision your cluster using the provision-kube script, this will come in handy to tear everything down.

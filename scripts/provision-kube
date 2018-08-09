@@ -1,0 +1,249 @@
+#!/usr/bin/env bash
+
+
+BASEDIR=$(dirname "$0")
+source ${BASEDIR}/setEnv.sh
+
+. ${UTIL_DIR}/common.sh
+. ${UTIL_DIR}/certs.sh
+. ${UTIL_DIR}/gcloud.sh
+. ${UTIL_DIR}/kube.sh
+. ${UTIL_DIR}/etcd.sh
+
+function check_reqd_param() {
+    
+    if [[ -z $2 ]];then
+        echo "[$1] is required.."
+        exit 1
+    fi
+
+}
+
+function test_cidr() {
+    if [[ ! $1 =~ ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$ ]];then
+        echo "$1 not a valid CIDR"
+        exit 1
+    fi
+}
+
+function print_fix_width(){
+    if [ "$#" -eq 3 ]; then
+        printf "%-20s | %-20s |  %-20s \n" "$1" "$2" "$3"
+    else
+        printf "%-20s | %-20s \n" "$1" "$2"
+    fi
+}
+
+function write_to_env_file() {
+    printf "export ${1}=%s\n" "${!1}" >> ${ENV_FILE}
+}
+
+function initalize_project() {
+
+    echo -n "Provide a prefix that will be used to name all your resources [PREFIX]: "
+    read PREFIX
+    check_reqd_param ${PREFIX} "PREFIX"
+
+    echo -n "Provide the primary subnet CIDR (this is where the workers and controllers live) [PRIMARY_SUBNET_CIDR]: "
+    read PRIMARY_SUBNET_CIDR
+    check_reqd_param ${PRIMARY_SUBNET_CIDR} PRIMARY_SUBNET_CIDR
+    test_cidr ${PRIMARY_SUBNET_CIDR}
+    if [[ ! ${PRIMARY_SUBNET_CIDR} == */24 ]]; then
+        echo "PRIMARY_SUBNET_CIDR must be of the form X.X.X.X/24"
+        exit 1
+    fi
+
+    PRIMARY_CLUSTER_IP=(${PRIMARY_SUBNET_CIDR////});
+    BASE_IP=""
+    IDX=0
+    for i in $(echo $PRIMARY_CLUSTER_IP | tr "." "\n");do
+        if [[ ! $IDX == 3 ]];then
+            BASE_IP="${BASE_IP}${i}."
+            IDX=$((IDX + 1))
+        fi
+    done
+
+    CONTROLLER_IP_PREFIX="${BASE_IP}1"
+    WORKER_IP_PREFIX="${BASE_IP}2"
+
+    echo -n "Provide the cluster CIDR (this is where the pods that make up the kubernetes clusters live) [CLUSTER_CIDR]: "
+    read CLUSTER_CIDR
+    check_reqd_param ${CLUSTER_CIDR} CLUSTER_CIDR
+    test_cidr  ${CLUSTER_CIDR}
+    if [[ ! ${CLUSTER_CIDR} == */16 ]]; then
+        echo "CLUSTER_CIDR must be of the form X.X.X.X/16"
+        exit 1
+    fi
+
+    POD_CLUSTER_IP=(${CLUSTER_CIDR//// });
+    POD_CLUSTER_EXPR=""
+    IDX=0
+    for i in $(echo $POD_CLUSTER_IP | tr "." "\n");do
+        if [[ $IDX == 2 ]];then
+            POD_CLUSTER_EXPR="${POD_CLUSTER_EXPR}i."
+            IDX=$((IDX + 1))
+        else
+            POD_CLUSTER_EXPR="${POD_CLUSTER_EXPR}${i}."
+            IDX=$((IDX + 1))
+        fi
+    done
+
+    POD_CLUSTER_EXPR="${POD_CLUSTER_EXPR%?}"
+    POD_CLUSTER_EXPR="${POD_CLUSTER_EXPR}/24"
+
+    export NETWORK_NAME=${PREFIX}-network
+    export CLUSTER_NAME=${PREFIX}-cluster
+    export PRIMARY_SUBNET_NAME=${PREFIX}-subnet
+    export CONTEXT_NAME=${PREFIX}-context
+
+    PROJ_DIR="$(cd;pwd)/$(basename "$1")${PREFIX}-KUBE-$RANDOM"
+
+    echo "Will setup the cluster with the following settings:"
+
+    DASHES=$(printf "%20s" | tr " " "-")
+    print_fix_width "Setting" "Value"
+    print_fix_width "${DASHES}" "${DASHES}"
+    print_fix_width "Project Directory" "${PROJ_DIR}"
+    print_fix_width "Prefix" "${PREFIX}"
+    print_fix_width "Primary subnet CIDR" "${PRIMARY_SUBNET_CIDR}"
+    print_fix_width "Cluster CIDR" "${CLUSTER_CIDR}"
+    print_fix_width "Network name" "${NETWORK_NAME}"
+    print_fix_width "Cluster name" "${CLUSTER_NAME}"
+    print_fix_width "Primary subnet name" "${PRIMARY_SUBNET_NAME}"
+    print_fix_width "Network Name" "${NETWORK_NAME}"
+    print_fix_width "Subnet Name" "${PRIMARY_SUBNET_NAME}"
+    print_fix_width "Cluster Name" "${CLUSTER_NAME}"
+    print_fix_width "Context Name" "${CONTEXT_NAME}"
+
+
+    ask_to_continue "continue?" 
+    if [[ $? == 1 ]];then
+        echo "exiting..."
+        exit 1
+    fi
+
+
+    echo "creating a project directory to store artifacts [${PROJ_DIR}]"
+    mkdir -p ${PROJ_DIR}
+    cd ${PROJ_DIR}
+
+    CERT_DIR=${PROJ_DIR}/certs
+    echo "creating a directory to store certs [${CERT_DIR}]"
+    mkdir -p ${CERT_DIR}
+
+    ETCD_DIR=${PROJ_DIR}/etcd
+    echo "creating a directory to store etcd config [${ETCD_DIR}]"
+    mkdir -p ${ETCD_DIR}
+
+    CONTROL_PLANE_DIR=${PROJ_DIR}/control-plane
+    echo "creating a directory to store control plane config [${CONTROL_PLANE_DIR}]"
+    mkdir -p ${CONTROL_PLANE_DIR}
+
+    RBAC_DIR=${PROJ_DIR}/rbac
+    echo "creating a directory to store rbac config [${RBAC_DIR}]"
+    mkdir -p ${RBAC_DIR}
+
+    WORKER_DIR=${PROJ_DIR}/worker
+    echo "creating a directory to store worker config [${WORKER_DIR}]"
+    mkdir -p ${WORKER_DIR}
+
+    ENCRYPTION_DIR=${PROJ_DIR}/encryption
+    echo "creating a directory to store encryption config [${ENCRYPTION_DIR}]"
+    mkdir -p ${ENCRYPTION_DIR}
+
+
+    ENV_FILE="${PROJ_DIR}/setEnv.sh"
+    touch ${ENV_FILE}
+
+    GCLOUD_LOG_FILE="${PROJ_DIR}/gcloud.log"
+    touch ${GCLOUD_LOG_FILE}
+    KUBE_LOG_FILE="${PROJ_DIR}/kube.log"
+    touch ${KUBE_LOG_FILE}
+
+    echo "creating an environment file to output environment variables that can be used later"
+
+    write_to_env_file "PROJ_DIR"
+    write_to_env_file "ENV_FILE"
+    write_to_env_file "NETWORK_NAME"
+    write_to_env_file "CLUSTER_NAME"
+    write_to_env_file "PRIMARY_SUBNET_NAME"
+    write_to_env_file "PRIMARY_SUBNET_CIDR"
+    write_to_env_file "CLUSTER_CIDR"
+    write_to_env_file "GCLOUD_LOG_FILE"
+    write_to_env_file "KUBE_LOG_FILE"
+    write_to_env_file "CONTROLLER_IP_PREFIX"
+    write_to_env_file "WORKER_IP_PREFIX"
+    write_to_env_file "POD_CLUSTER_EXPR"
+    write_to_env_file "CERT_DIR"
+    write_to_env_file "ETCD_DIR"
+    write_to_env_file "CONTROL_PLANE_DIR"
+    write_to_env_file "RBAC_DIR"
+    write_to_env_file "WORKER_DIR"
+
+    source ${ENV_FILE}
+}
+
+if [[ -z $1 ]]; then
+  echo "existing project not specified; will create a new project for you.."
+  initalize_project
+fi
+
+echo -n "would you like to create gcloud resources? (Y|n): "
+read cont
+if [[ $cont == "Y" ]];then
+    create_gcloud_resources
+fi
+
+ask_to_continue "would you like to continue creating certificates?" 
+
+if [[ $? == 0 ]];then
+    generate_certs    
+fi
+
+ask_to_continue "would you like to generate configuration?" 
+
+if [[ $? == 0 ]];then
+    generate_config
+fi
+
+ask_to_continue "would you like to generate and deploy the encryption keys?" 
+
+if [[ $? == 0 ]];then
+    generate_enc
+fi
+
+ask_to_continue "would you like to bootstrap the etcd cluster?" 
+if [[ $? == 0 ]];then
+    bootstrap_etcd
+fi
+
+ask_to_continue "would you like to bootstrap the control plane?" 
+if [[ $? == 0 ]];then
+    bootstrap_control_plane
+fi
+
+ask_to_continue "would you like to setup rbac configuration?" 
+if [[ $? == 0 ]];then
+    configure_rbac
+fi
+
+
+ask_to_continue "Would you like to create an external L/B for API servers (only applies to GCP)?" 
+if [[ $? == 0 ]];then
+    create_external_gcloud_lb
+fi
+
+ask_to_continue "would you like to configure the worker nodes?" 
+if [[ $? == 0 ]];then
+    configure_worker_nodes
+fi
+
+ask_to_continue "Would you like to create pod network routes (only applies to GCP)?" 
+if [[ $? == 0 ]];then
+    create_gcloud_pod_routes
+fi
+
+ask_to_continue "Would you like to configure your local kubectl to point to the newly created cluster?"
+if [[ $? == 0 ]];then
+    configure_local_kubects
+fi

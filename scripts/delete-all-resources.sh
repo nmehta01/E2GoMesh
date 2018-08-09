@@ -13,6 +13,8 @@ fi
 
 REGEX=$1
 
+ALL_ROUTES=$(gcloud compute routes list --filter="name~'$REGEX'" | grep $REGEX | awk  '{print $1;}')
+
 ALL_INSTANCES=$(gcloud compute instances list --filter="name~'$REGEX'" | grep $REGEX | awk '{print $1;}')
 if [[ -z $ALL_INSTANCES ]];then
     echo "No instances found"
@@ -33,19 +35,36 @@ if [[ -z $ALL_SUBNETS ]];then
     echo "No subnets found"
 fi
 
+ALL_FORWARDING_RULES=$(gcloud compute forwarding-rules list --filter="name~'$REGEX'" --format="table(name)" | grep $REGEX | awk '{print $1;}')
+
+ALL_HEALTH_CHECKS=$(gcloud compute http-health-checks list --filter="name~'$REGEX'" --format="table(name)" | grep $REGEX | awk '{print $1;}')
+
+ALL_TARGET_POOLS=$(gcloud compute target-pools list --filter="name~'$REGEX'" --format="table(name)" | grep $REGEX | awk '{print $1;}')
+
 ALL_STATIC_IPS=$(gcloud compute addresses list --filter="name~'$REGEX'"  | grep $REGEX | awk '{print $1;}')
 
 echo "will DELETE the following: "
+echo "ROUTES: $ALL_ROUTES"
 echo "Instances: $ALL_INSTANCES"
 echo "Networks: $ALL_NETWORKS"
 echo "Firewall Rules: $ALL_FW_RULES"
 echo "Subnets: $ALL_SUBNETS"
 echo "Static IPs: $ALL_STATIC_IPS"
+echo "Forwarding Rules: $ALL_FORWARDING_RULES"
+echo "Target Pools: $ALL_TARGET_POOLS"
+echo "Health Checks: $ALL_HEALTH_CHECKS"
+
 echo -n "Proceed? [y|n]: "
 
 read proceed
 
 if [[  $proceed = "y" ]];then
+
+    for route in $ALL_ROUTES; do
+        echo "deleting route $route"
+        gcloud compute routes delete $route --quiet
+    done    
+
     for instance in $ALL_INSTANCES; do
         echo "deleting compute instance $instance"
         gcloud compute instances delete $instance --quiet
@@ -70,5 +89,22 @@ if [[  $proceed = "y" ]];then
         echo "deleting static ip $ip"
         gcloud compute addresses delete $ip --quiet
     done
+
+    for fw in ${ALL_FORWARDING_RULES}; do
+        echo "deleting forwarding rule $fw"
+        gcloud compute forwarding-rules delete $fw --region $(gcloud config get-value compute/region) --quiet
+    done
+
+    for tp in ${ALL_TARGET_POOLS}; do
+        echo "deleting target pools $tp"
+        gcloud compute target-pools delete $tp --quiet
+    done   
+ 
+    for hc in ${ALL_HEALTH_CHECKS}; do
+        echo "deleting health checks $hc"
+        gcloud compute http-health-checks delete $hc --quiet
+    done
+
+    
 
 fi 

@@ -1,6 +1,6 @@
         sudo apt-get update
         sudo apt-get -y install socat conntrack ipset
-        wget -q --show-progress --https-only --timestamping \
+        wget -q --https-only --timestamping \
           https://github.com/kubernetes-incubator/cri-tools/releases/download/v1.0.0-beta.0/crictl-v1.0.0-beta.0-linux-amd64.tar.gz \
           https://storage.googleapis.com/kubernetes-the-hard-way/runsc \
           https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
@@ -92,24 +92,24 @@ EOF5
         sudo mv ca.pem /var/lib/kubernetes/
 
         cat <<EOF2 | sudo tee /var/lib/kubelet/kubelet-config.yaml
-        kind: KubeletConfiguration
-        apiVersion: kubelet.config.k8s.io/v1beta1
-        authentication:
-          anonymous:
-            enabled: false
-          webhook:
-            enabled: true
-          x509:
-            clientCAFile: "/var/lib/kubernetes/ca.pem"
-        authorization:
-          mode: Webhook
-        clusterDomain: "cluster.local"
-        clusterDNS:
-          - "10.38.0.10"
-        podCIDR: "\${POD_CIDR}"
-        runtimeRequestTimeout: "15m"
-        tlsCertFile: "/var/lib/kubelet/\${HOSTNAME}.pem"
-        tlsPrivateKeyFile: "/var/lib/kubelet/\${HOSTNAME}-key.pem"
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+  x509:
+    clientCAFile: "/var/lib/kubernetes/ca.pem"
+authorization:
+  mode: Webhook
+clusterDomain: "cluster.local"
+clusterDNS:
+  - "10.38.0.10"
+podCIDR: "${POD_CIDR}"
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/var/lib/kubelet/\${HOSTNAME}.pem"
+tlsPrivateKeyFile: "/var/lib/kubelet/\${HOSTNAME}-key.pem"
 EOF2
 
         cat <<EOF3 | sudo tee /etc/systemd/system/kubelet.service
@@ -139,12 +139,12 @@ EOF3
         sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
 
         cat <<EOF4 | sudo tee /var/lib/kube-proxy/kube-proxy-config.yaml
-        kind: KubeProxyConfiguration
-        apiVersion: kubeproxy.config.k8s.io/v1alpha1
-        clientConnection:
-          kubeconfig: "/var/lib/kube-proxy/kubeconfig"
-        mode: "iptables"
-        clusterCIDR: "${CLUSTER_CIDR}"
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+clientConnection:
+  kubeconfig: "/var/lib/kube-proxy/kubeconfig"
+mode: "iptables"
+clusterCIDR: "${CLUSTER_CIDR}"
 EOF4
 
         cat <<EOF5 | sudo tee /etc/systemd/system/kube-proxy.service

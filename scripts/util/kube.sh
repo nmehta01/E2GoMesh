@@ -18,7 +18,7 @@ function generate_config() {
         kubectl config set-cluster ${CLUSTER_NAME} \
           --certificate-authority=ca.pem \
           --embed-certs=true \
-          --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6440 \
+          --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
           --kubeconfig=${instance}.kubeconfig
 
         kubectl config set-credentials system:node:${instance} \
@@ -41,7 +41,7 @@ function generate_config() {
     kubectl config set-cluster ${CLUSTER_NAME} \
       --certificate-authority=ca.pem \
       --embed-certs=true \
-      --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6440 \
+      --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
       --kubeconfig=kube-proxy.kubeconfig
 
     kubectl config set-credentials system:kube-proxy \

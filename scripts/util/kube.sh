@@ -184,6 +184,8 @@ function bootstrap_control_plane() {
 
 function configure_rbac() {
 
+
+
     cp ${RBAC_TEMPLATE_DIR}/rbac.sh ${RBAC_DIR}/
 
     chmod +x ${RBAC_DIR}/rbac.sh
@@ -217,8 +219,28 @@ function configure_local_kubects() {
     kubectl config set-cluster ${CLUSTER_NAME} --certificate-authority=ca.pem --embed-certs=true --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443
     kubectl config set-credentials admin --client-certificate=admin.pem --client-key=admin-key.pem
     kubectl config set-context ${CONTEXT_NAME} --cluster=${CLUSTER_NAME} --user=admin
+    kubectl config use-context ${CONTEXT_NAME}
     
     echo "verifying kubectl..."
     kubectl get componentstatuses
     kubectl get nodes
+}
+
+function configure_kube_dns() {
+
+    echo "deploying kube-dns"
+    kubectl create -f https://storage.googleapis.com/kubernetes-the-hard-way/kube-dns.yaml
+    kubectl get pods -l k8s-app=kube-dns -n kube-system
+
+    echo "installing busybox to check if dns resolves correctly"
+    kubectl run busybox --image=busybox:1.28 --command -- sleep 3600
+
+    echo "sleeping for 2 mins so the pod can come up"
+    sleep 2m
+
+    kubectl get pods -o wide --all-namespaces
+    POD_NAME=$(kubectl get pods -l run=busybox -o jsonpath="{.items[0].metadata.name}")
+    echo "testing dns on pod $POD_NAME"
+    kubectl exec -ti $POD_NAME -- nslookup kubernetes
+
 }

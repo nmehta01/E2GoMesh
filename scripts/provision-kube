@@ -179,6 +179,7 @@ function initalize_project() {
     write_to_env_file "CONTROL_PLANE_DIR"
     write_to_env_file "RBAC_DIR"
     write_to_env_file "WORKER_DIR"
+    write_to_env_file "CONTEXT_NAME"
 
     source ${ENV_FILE}
 }
@@ -246,4 +247,9 @@ fi
 ask_to_continue "Would you like to configure your local kubectl to point to the newly created cluster?"
 if [[ $? == 0 ]];then
     configure_local_kubects
+fi
+
+ask_to_continue "Would you like to deploy kube-dns to the cluster?"
+if [[ $? == 0 ]];then
+    configure_kube_dns
 fi

@@ -105,35 +105,36 @@ authorization:
   mode: Webhook
 clusterDomain: "cluster.local"
 clusterDNS:
-  - "10.38.0.10"
+  - "10.32.0.10"
 podCIDR: "${POD_CIDR}"
 runtimeRequestTimeout: "15m"
 tlsCertFile: "/var/lib/kubelet/\${HOSTNAME}.pem"
 tlsPrivateKeyFile: "/var/lib/kubelet/\${HOSTNAME}-key.pem"
 EOF2
 
-        cat <<EOF3 | sudo tee /etc/systemd/system/kubelet.service
-        [Unit]
-        Description=Kubernetes Kubelet
-        Documentation=https://github.com/kubernetes/kubernetes
-        After=containerd.service
-        Requires=containerd.service
+cat <<EOF3 | sudo tee /etc/systemd/system/kubelet.service
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/kubernetes/kubernetes
+After=containerd.service
+Requires=containerd.service
 
-        [Service]
-        ExecStart=/usr/local/bin/kubelet \\
-          --config=/var/lib/kubelet/kubelet-config.yaml \\
-          --container-runtime=remote \\
-          --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
-          --image-pull-progress-deadline=2m \\
-          --kubeconfig=/var/lib/kubelet/kubeconfig \\
-          --network-plugin=cni \\
-          --register-node=true \\
-          --v=2
-        Restart=on-failure
-        RestartSec=5
+[Service]
+ExecStart=/usr/local/bin/kubelet \
+  --config=/var/lib/kubelet/kubelet-config.yaml \
+  --container-runtime=remote \
+  --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \
+  --resolv-conf=/run/systemd/resolve/resolv.conf \
+  --image-pull-progress-deadline=2m \
+  --kubeconfig=/var/lib/kubelet/kubeconfig \
+  --network-plugin=cni \
+  --register-node=true \
+  --v=2
+Restart=on-failure
+RestartSec=5
 
-        [Install]
-        WantedBy=multi-user.target
+[Install]
+WantedBy=multi-user.target
 EOF3
 
         sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
@@ -165,3 +166,4 @@ EOF5
         sudo systemctl daemon-reload
         sudo systemctl enable containerd kubelet kube-proxy
         sudo systemctl start containerd kubelet kube-proxy
+

@@ -71,7 +71,7 @@ function generate_certs() {
     -ca=ca.pem \
     -ca-key=ca-key.pem \
     -config=ca-config.json \
-    -hostname=10.38.0.1,${CONTROLLER_IP_LIST_INTERNAL},${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
+    -hostname=10.32.0.1,${CONTROLLER_IP_LIST_INTERNAL},${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
     -profile=kubernetes \
     kubernetes-csr.json | cfssljson -bare kubernetes
 

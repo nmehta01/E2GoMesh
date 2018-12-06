@@ -228,15 +228,16 @@ function configure_local_kubects() {
 
 function configure_kube_dns() {
 
-    echo "deploying kube-dns"
-    kubectl create -f https://storage.googleapis.com/kubernetes-the-hard-way/kube-dns.yaml
+    echo "deploying core-dns"
+    kubectl apply -f https://storage.googleapis.com/kubernetes-the-hard-way/coredns.yaml
+
     kubectl get pods -l k8s-app=kube-dns -n kube-system
 
     echo "installing busybox to check if dns resolves correctly"
     kubectl run busybox --image=busybox:1.28 --command -- sleep 3600
 
     echo "sleeping for 2 mins so the pod can come up"
-    sleep 2m
+    sleep 120
 
     kubectl get pods -o wide --all-namespaces
     POD_NAME=$(kubectl get pods -l run=busybox -o jsonpath="{.items[0].metadata.name}")

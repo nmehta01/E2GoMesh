@@ -1,14 +1,14 @@
         sudo apt-get update
         sudo apt-get -y install socat conntrack ipset
         wget -q --https-only --timestamping \
-          https://github.com/kubernetes-incubator/cri-tools/releases/download/v1.0.0-beta.0/crictl-v1.0.0-beta.0-linux-amd64.tar.gz \
-          https://storage.googleapis.com/kubernetes-the-hard-way/runsc \
-          https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
-          https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-plugins-amd64-v0.6.0.tgz \
-          https://github.com/containerd/containerd/releases/download/v1.1.0/containerd-1.1.0.linux-amd64.tar.gz \
-          https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubectl \
-          https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kube-proxy \
-          https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubelet
+            https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.12.0/crictl-v1.12.0-linux-amd64.tar.gz \
+            https://storage.googleapis.com/kubernetes-the-hard-way/runsc-50c283b9f56bb7200938d9e207355f05f79f0d17 \
+            https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
+            https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-plugins-amd64-v0.6.0.tgz \
+            https://github.com/containerd/containerd/releases/download/v1.2.0-rc.0/containerd-1.2.0-rc.0.linux-amd64.tar.gz \
+            https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl \
+            https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-proxy \
+            https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubelet
 
         sudo mkdir -p \
           /etc/cni/net.d \
@@ -18,12 +18,13 @@
           /var/lib/kubernetes \
           /var/run/kubernetes
 
-        chmod +x kubectl kube-proxy kubelet runc.amd64 runsc
+        sudo mv runsc-50c283b9f56bb7200938d9e207355f05f79f0d17 runsc
         sudo mv runc.amd64 runc
+        chmod +x kubectl kube-proxy kubelet runc runsc
         sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
         sudo tar -xvf crictl-v1.0.0-beta.0-linux-amd64.tar.gz -C /usr/local/bin/
         sudo tar -xvf cni-plugins-amd64-v0.6.0.tgz -C /opt/cni/bin/
-        sudo tar -xvf containerd-1.1.0.linux-amd64.tar.gz -C /
+        sudo tar -xvf containerd-1.2.0-rc.0.linux-amd64.tar.gz -C /
 
         cat <<EOF2 | sudo tee /etc/cni/net.d/10-bridge.conf
         {

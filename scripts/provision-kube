@@ -253,3 +253,8 @@ ask_to_continue "Would you like to deploy kube-dns to the cluster?"
 if [[ $? == 0 ]];then
     configure_kube_dns
 fi
+
+echo "Your cluster is ready!"
+kubectl cluster-info
+kubectl get nodes
+

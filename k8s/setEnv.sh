@@ -7,4 +7,4 @@ export RBAC_TEMPLATE_DIR=${TEMPLATE_DIR}/rbac
 export ETCD_TEMPLATE_DIR=${TEMPLATE_DIR}/etcd
 export WORKER_TEMPLATE_DIR=${TEMPLATE_DIR}/worker
 export UTIL_DIR=${BASE_DIR}/util
-
+export PROMETHEUS_DIR=${BASE_DIR}/prometheus

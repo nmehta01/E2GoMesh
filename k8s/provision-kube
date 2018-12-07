@@ -9,6 +9,7 @@ source ${BASEDIR}/setEnv.sh
 . ${UTIL_DIR}/gcloud.sh
 . ${UTIL_DIR}/kube.sh
 . ${UTIL_DIR}/etcd.sh
+. ${UTIL_DIR}/prometheus.sh
 
 function check_reqd_param() {
     
@@ -184,7 +185,12 @@ function initalize_project() {
     source ${ENV_FILE}
 }
 
-if [[ -z $1 ]]; then
+if [[ "$1" == "no-prompt" ]];then
+    export NO_PROMPT=1
+fi
+
+
+if [[ -z $2 ]]; then
   echo "existing project not specified; will create a new project for you.."
   initalize_project
 fi
@@ -249,9 +255,14 @@ if [[ $? == 0 ]];then
     configure_local_kubects
 fi
 
-ask_to_continue "Would you like to deploy kube-dns to the cluster?"
+ask_to_continue "Would you like to deploy core-dns to the cluster?"
 if [[ $? == 0 ]];then
     configure_kube_dns
+fi
+
+ask_to_continue "Would you like to deploy prometheus/grafana/alertmanager?"
+if [[ $? == 0 ]];then
+    deploy_prometheus
 fi
 
 echo "Your cluster is ready!"

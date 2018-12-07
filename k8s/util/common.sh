@@ -5,16 +5,20 @@
 #
 
 function ask_to_continue() {
-    echo -n "${1} (Y|n): "
-    read cont
-    if [[ ! $cont == 'n' && ! $cont == 'Y' ]];then
-        echo "Not a valid input $cont"
-        ask_to_continue $1 
-    fi
-    if [[ $cont == "n" ]];then
-        return 1
+    if [[ -z ${NO_PROMPT+x} ]];then
+        echo -n "${1} (Y|n): "
+        read cont
+        if [[ ! $cont == 'n' && ! $cont == 'Y' ]];then
+            echo "Not a valid input $cont"
+            ask_to_continue $1
+        fi
+        if [[ $cont == "n" ]];then
+            return 1
+        else
+            return 0
+        fi
     else
-        return 0
+       return 0
     fi
 }
 

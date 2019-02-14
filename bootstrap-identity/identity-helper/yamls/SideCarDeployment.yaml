@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-app-deployment
+  labels:
+    app: sample-go-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-go-app
+  template:
+    metadata:
+      labels:
+        app: sample-go-app
+    spec:
+      containers:
+      - name: app-container
+        image: gcr.io/e2-chase/app-container:v3
+        ports:
+        - containerPort: 8080
+      - name: identity-sidecar-container
+        image: gcr.io/e2-chase/identity-sidecar-container:v3
+        ports:
+        - containerPort: 8080
+      initContainers:
+      - name: identity-init-container
+        image: gcr.io/e2-chase/identity-init-container:v1

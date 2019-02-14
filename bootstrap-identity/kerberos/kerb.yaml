@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kerberos
+spec:
+  containers:
+            - name: kerberos 
+              image: "gcr.io/e2-chase/kerberos/kerberos-server-7.5"
+              ports:
+                - containerPort: 88
+                  name: "eighty-eight"
+                - containerPort: 464
+                  name: "four-six-four"
+                - containerPort : 749
+                  name: "seven-four-nine"
+              env:
+                - name: KRB5_REALM
+                  value:  kerberos.gomesh.com
+                - name: KRB5_KDC
+                  value: localhost
+                - name: KRB5_PASS
+                  value: secret
+              volumeMounts: 
+                - name: krb5kdc-data
+                  mountPath: /shared-location
+            - name: rest-api
+              image: "gcr.io/e2-chase/kerberos/kerberos-rest-api-2.2"
+              volumeMounts:
+                - name: krb5kdc-data
+                  mountPath: /kerberos-server
+  volumes:
+    - name: krb5kdc-data
+      emptyDir: {}

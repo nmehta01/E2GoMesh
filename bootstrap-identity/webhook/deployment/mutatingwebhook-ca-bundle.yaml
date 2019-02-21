@@ -1,0 +1,22 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: sidecar-injector-webhook-cfg
+  labels:
+    app: sidecar-injector
+webhooks:
+  - name: sidecar-injector.morven.me
+    clientConfig:
+      service:
+        name: sidecar-injector-webhook-svc
+        namespace: webhook 
+        path: "/mutate"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURDekNDQWZPZ0F3SUJBZ0lRUzJKSmlyYy81NzdOeU9DbEJJZ3FqVEFOQmdrcWhraUc5dzBCQVFzRkFEQXYKTVMwd0t3WURWUVFERXlRek9UaGpOVEF3TkMxbU1HWmtMVFE1TlRFdE9UWTNPUzAxWXpFMk1qRTVOamcyTm1JdwpIaGNOTVRrd01qSXdNakExT1RVMVdoY05NalF3TWpFNU1qRTFPVFUxV2pBdk1TMHdLd1lEVlFRREV5UXpPVGhqCk5UQXdOQzFtTUdaa0xUUTVOVEV0T1RZM09TMDFZekUyTWpFNU5qZzJObUl3Z2dFaU1BMEdDU3FHU0liM0RRRUIKQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUN3Q2c5OXdaYytUS3hUODJtUVBNdElnbXdVRTQ2bnJrdkZzU0pBNnVZQgo1cVdLdnlScEZ4TGxNcmo0d1pCSW5CblExYTZDZnVwVlUzMlNLN1JuVVQ2REdNWFNzbVJvT2tjMXlwYW14QWhrCndrcFlFMW1sUHRseTI1RjJ3c05iWGJ1R2dpVDI2UXk2Rll1em16ckVWZHhFTWxCN21HclBxZFBnMWh0YzZ3TlAKMCtEMktDeWVxTkRUZzhocm41aDgzc2JXVkUyUGVidnpmM3RNR1l2NXdKK01NWXZlTGNrQnRuaHJFd1lRdU0vcgo5WkxjUnFrQXpYQ1dDbVVEM0szNStJZURQYWt3NmI5ZENVbnU3Rjc2d2hMQWVRcW1iUUEySzQyNDJhUUZra3JOCjJuRjBjWDVtQkdlYi8yK1NIaHF2M0c1Mjd1K0pVc2hkV2dmZ1ZvUjMzUm01QWdNQkFBR2pJekFoTUE0R0ExVWQKRHdFQi93UUVBd0lDQkRBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFDWgo3Wkx1RlVMcllUZnlSUFZSNmxRcFF2ZTJqbHpsMkxCM0FFUW40aUVSZy9PZWx4anZXNzdEQllUTWdWVkNSOTduCmw4eGJ0ckZmb2JqaVhXZXU5T21QWllkWk9kRzFOVjg0cHJGZmJHL29GMGYyMFFqUzdKc0NsdURoRjhUYnNHbTcKeFJLdlNiSjJCQWNXSFlGcFZLeWhKYXFnaWNTU24xVWZuWXkwbGdteHFGMk14U1NTWHp3MkQzSk1WQjYvZGtCRwoveUJmL3h5bUFDcVRJOTRPQjdIQ1dCQ2hUNzNvVnYxK3NqSUZUUXZla1BjRG53alJ4cUdpejQ0QTZudlJibytlCi94M0d0SjdpUkw5dkl6cTJYWWdxdndUWkc5WDQzeHo3eis1VDFsaGVCQVVuZnpzTHZBTmp2bEVQZVEzY1UvaE0KSDNpNlduZ2J0MkVNcDlpRVArOFcKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    rules:
+      - operations: [ "CREATE" ]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    namespaceSelector:
+      matchLabels:
+        sidecar-injector: enabled

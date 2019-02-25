@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: gcr.io/e2-chase/gomesh-webhook:v1
+          image: gcr.io/e2-chase/gomesh-webhook:v2
           imagePullPolicy: IfNotPresent
           args:
             - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml

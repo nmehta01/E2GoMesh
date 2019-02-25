@@ -16,6 +16,16 @@ data:
          - name: krb5
            mountPath: /krb5
            readOnly: false
+    initContainers:
+      - name: identity-init-container
+        image: gcr.io/e2-chase/identity-init-container:v1
+        volumeMounts:
+         - name: podinfo
+           mountPath: /etc/podinfo
+           readOnly: true
+         - name: krb5
+           mountPath: /krb5
+           readOnly: false
     volumes:
       - name: krb5
         emptyDir: {}

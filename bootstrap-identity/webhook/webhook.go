@@ -55,6 +55,7 @@ type Config struct {
 	InitContainers  []corev1.Container  `yaml:"initContainers"`
 	Containers  []corev1.Container  `yaml:"containers"`
 	Volumes     []corev1.Volume     `yaml:"volumes"`
+	VolumeMounts  []corev1.VolumeMount  `yaml:"volumeMounts"`
 }
 
 type patchOperation struct {
@@ -194,7 +195,39 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 	return patch
 }
 
-// create mutation patch for resoures
+func updateContainers(target []corev1.Container, added []corev1.VolumeMount, basePath string) (patch []patchOperation) {
+
+	if target != nil {
+		for _, container := range target {
+			patch = append(patch, updateVolumeMount(container.VolumeMounts, added, basePath)...)
+		}
+	}
+
+	return patch
+}
+
+func updateVolumeMount(target, added []corev1.VolumeMount, basePath string) (patch []patchOperation) {
+	first := len(target) == 0
+	var value interface{}
+	for _, add := range added {
+		value = add
+		path := basePath
+		if first {
+			first = false
+			value = []corev1.VolumeMount{add}
+		} else {
+			path = path + "/-"
+		}
+		patch = append(patch, patchOperation {
+			Op:    "add",
+			Path:  path,
+			Value: value,
+		})
+	}
+	return patch
+}
+
+// create mutation patch for resources
 func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]string) ([]byte, error) {
 	var patch []patchOperation
 
@@ -202,6 +235,8 @@ func createPatch(pod *corev1.Pod, sidecarConfig *Config, annotations map[string]
 	patch = append(patch, addContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
+
+	patch = append(patch, updateContainers(pod.Spec.Containers, sidecarConfig.VolumeMounts, "/spec/containers/volumeMounts")...)
 
 	return json.Marshal(patch)
 }

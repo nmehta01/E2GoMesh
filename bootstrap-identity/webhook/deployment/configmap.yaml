@@ -16,6 +16,7 @@ data:
          - name: krb5
            mountPath: /krb5
            readOnly: false
+           mountPropagation: HostToContainer
     initContainers:
       - name: identity-init-container
         image: gcr.io/e2-chase/identity-init-container:v1

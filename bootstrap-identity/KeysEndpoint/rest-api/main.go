@@ -34,7 +34,7 @@ func GetPeople(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetKeys(w http.ResponseWriter, r *http.Request) {
-	dat, err := ioutil.ReadFile("test.pem")
+	dat, err := ioutil.ReadFile("/etc/config/Key-rsa")
 	check(err)
 	json.NewEncoder(w).Encode(dat)
 }

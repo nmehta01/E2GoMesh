@@ -1,0 +1,1 @@
+kl-controller-1:~$ kubectl create configmap service-account.pub --from-file=service.pub=/var/lib/kubernetes/service-account.pem

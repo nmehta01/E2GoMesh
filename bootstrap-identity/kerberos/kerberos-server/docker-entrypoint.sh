@@ -1,6 +1,7 @@
 #!/bin/sh
 
 
+
 if [ -z ${KRB5_REALM} ]; then
     echo "No KRB5_REALM Provided. Exiting ..."
     exit 1
@@ -86,5 +87,4 @@ EOT
 fi
 
 
-/usr/bin/supervisord -c /etc/supervisord.conf
 

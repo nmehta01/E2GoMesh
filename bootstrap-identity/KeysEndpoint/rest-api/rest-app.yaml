@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pubkeys
+spec:
+  containers:
+  - name: rest-app 
+    image: gcr.io/e2-chase/rest-app:v85
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+    - name: config-volume
+      configMap:
+        # Provide the name of the ConfigMap containing the files you want
+        # to add to the container
+        name: public-key

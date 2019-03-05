@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+//	"fmt"
 )
 
 func check(e error) {
@@ -37,6 +38,7 @@ func GetKeys(w http.ResponseWriter, r *http.Request) {
 	dat, err := ioutil.ReadFile("/etc/config/Key-rsa")
 	check(err)
 	json.NewEncoder(w).Encode(dat)
+	//fmt.Fprintln(w, ioutil.ReadFile("test.pem"))
 }
 
 // Display a single data

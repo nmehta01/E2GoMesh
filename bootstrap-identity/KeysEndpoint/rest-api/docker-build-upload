@@ -1,0 +1,14 @@
+#Set GCP Project
+
+
+gcloud config set project [PROJECT_ID]
+gcloud config set compute/zone us-central1-b
+export PROJECT_ID="$(gcloud config get-value project -q)"
+
+#Docker build and upload to GCR
+sudo docker build -t gcr.io/${PROJECT_ID}/hello-app:v1 .
+gcloud auth configure-docker
+sudo docker push gcr.io/${PROJECT_ID}/hello-app:v1
+sudo docker run --rm -p 8080:8080 gcr.io/${PROJECT_ID}/hello-app:v1
+
+

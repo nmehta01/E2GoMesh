@@ -1,7 +1,7 @@
 {
   "podInfoPath": "/etc/podinfo/annotations",
-  "kdcServiceURL": "http://35.184.181.179:31823/api/kerberos/fetch",
-  "krb5ConfURL": "http://35.184.181.179:31823/api/kerberos/config/fetch",
+  "kdcServiceURL": "http://35.184.181.179:30153/api/kerberos/fetch",
+  "krb5ConfURL": "http://35.184.181.179:30153/api/kerberos/config/fetch",
   "krb5Path": "/tmp/kerberos",
   "jwtPath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
 }

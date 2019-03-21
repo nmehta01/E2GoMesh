@@ -19,9 +19,9 @@
  - Sets environment variables with all the URLs you need  
    
 
-     git clone https://github.com/ishmee1/ServiceMesh.git
-     cd istio-demo
-     source provisionDemoCluster.sh
+`     git clone https://github.com/ishmee1/ServiceMesh.git
+      cd istio-demo
+      source provisionDemoCluster.sh`
 
  The script will invoke `gcloud init`. Select the option `Re-initialize this configuration [...] with new settings` and select a zone/region that is closest to where you are physically located.
  The script will also ask you for a cluster name and setup a GKE cluster for you with that name and point kubectl to that cluster. 

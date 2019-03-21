@@ -38,7 +38,7 @@ function downloadIstio(){
 
 function deployIstio(){
     echo "deploying istio..."
-    kubectl apply -f ./istio-1.0.6/install/kubernetes/istio-demo-auth.yaml
+    kubectl apply -f ./istio-1.0.6/install/kubernetes/istio-demo.yaml
     echo "waiting for 2 mins for Istio components to come up"
     sleep 120
     kubectl create namespace bookinfo

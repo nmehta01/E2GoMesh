@@ -5,7 +5,10 @@ metadata:
 spec:
   containers:
   - name: rest-app 
-    image: gcr.io/e2-chase/rest-app:v85
+    image: gcr.io/e2-chase/rest-app:v5
+    env:
+    - name: PUBLIC_KEY
+      value: "/etc/config/service.pub" 
     volumeMounts:
     - name: config-volume
       mountPath: /etc/config
@@ -14,4 +17,5 @@ spec:
       configMap:
         # Provide the name of the ConfigMap containing the files you want
         # to add to the container
-        name: public-key
+        name: service-account.pub 
+

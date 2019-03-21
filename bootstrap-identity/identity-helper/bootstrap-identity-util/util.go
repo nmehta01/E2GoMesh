@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -30,6 +31,11 @@ type TokenServiceResponse struct {
 
 type KRB5ConfServiceResponse struct {
 	Krb5Conf string
+}
+
+type KerberosCredentialCache struct {
+	KCC *credentials.CCache
+	FID string
 }
 
 func NewKerberosCredentialCacheBroker() *KerberosCredentialCacheBroker {
@@ -86,7 +92,7 @@ func NewKerberosCredentialCacheBroker() *KerberosCredentialCacheBroker {
 
 func (broker *KerberosCredentialCacheBroker) generateKRB5ConfFile(){
 
-	fmt.Printf("Generating the krb5.conf file")
+	fmt.Println("Generating the krb5.conf file")
 
 	if response, err := http.Get(broker.Krb5ConfURL); err != nil {
 		panic(fmt.Errorf("Unable to fetch krb5.conf data from [%s] %s\n", broker.Krb5ConfURL, err))
@@ -116,7 +122,21 @@ func (broker *KerberosCredentialCacheBroker) generateKRB5ConfFile(){
 	}
 }
 
-func (broker *KerberosCredentialCacheBroker) brokerCredentialCacheForFID(functionalId string){
+func (broker *KerberosCredentialCacheBroker) ReadCredentials()  []*KerberosCredentialCache {
+
+	var toReturn []*KerberosCredentialCache
+	files, _ := ioutil.ReadDir(broker.Krb5Path)
+	for _, f := range files {
+		if f.IsDir() {
+			kccFile := filepath.Join(broker.Krb5Path, f.Name(), "krb5cc")
+			ccache, _ := credentials.LoadCCache(kccFile)
+			toReturn = append(toReturn, &KerberosCredentialCache{KCC:ccache, FID:f.Name()})
+		}
+	}
+	return toReturn
+}
+
+func (broker *KerberosCredentialCacheBroker) BrokerCredentialCacheForFID(functionalId string) *credentials.CCache{
 
 	fmt.Printf("Generating the kcc functional id for FID: [%s]\n", functionalId)
 	jwtContent, _ := ioutil.ReadFile(broker.JWTPath)
@@ -126,12 +146,12 @@ func (broker *KerberosCredentialCacheBroker) brokerCredentialCacheForFID(functio
 	//
 	if response, err := http.Post(broker.KDCSerivceURL, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 		fmt.Errorf("Unable to broker KCC for functional id [%s] from [%s] %s\n", functionalId, broker.KDCSerivceURL, err)
-		return
+		return nil
 	} else {
 		if data, err := ioutil.ReadAll(response.Body); err!=nil {
 			//TODO: introduce "real" error handling once the service api is established
 			fmt.Errorf("error reading kcc response for functional id: [%s}\n", functionalId, err)
-			return
+			return nil
 		} else {
 			var tokenServiceResponse TokenServiceResponse
 			json.Unmarshal(data, &tokenServiceResponse)
@@ -139,7 +159,7 @@ func (broker *KerberosCredentialCacheBroker) brokerCredentialCacheForFID(functio
 
 			if dec, err := base64.StdEncoding.DecodeString(string(tokenServiceResponse.KerberosCredentialCache)); err!=nil {
 				fmt.Errorf("error decoding base64 string for functional id: [%s}\n", functionalId, err)
-				return
+				return nil
 			} else {
 				functionalIdKccPath := filepath.Join(broker.Krb5Path, functionalId)
 
@@ -147,18 +167,20 @@ func (broker *KerberosCredentialCacheBroker) brokerCredentialCacheForFID(functio
 				ccPath := filepath.Join(functionalIdKccPath, "krb5cc")
 				if f, err := os.Create(ccPath); err!=nil {
 					fmt.Errorf("Unable to create krb5cc directory: [%s]\n", ccPath, err)
-					return
+					return nil
 				} else {
 					defer f.Close()
 					if _, err := f.Write(dec); err != nil {
 						fmt.Errorf("Unable to write credential cache: [%s]\n", f, err)
-						return
+						return nil
 					}
 					if err := f.Sync(); err != nil {
 						fmt.Errorf("sync error with credential cache file: [%s]\n", f, err)
-						return
+						return nil
 					}
 					fmt.Printf("KCC for FID [%s] can be found in [%s]\n", functionalId, f.Name())
+					ccache, _ := credentials.LoadCCache(f.Name())
+					return ccache
 				}
 			}
 		}
@@ -170,6 +192,6 @@ func (broker *KerberosCredentialCacheBroker) BrokerCredentialCache(){
 	fmt.Println("reading JWT token")
 
 	for _, functionalId := range broker.FunctionalIds {
-		broker.brokerCredentialCacheForFID(functionalId)
+		broker.BrokerCredentialCacheForFID(functionalId)
 	}
 }

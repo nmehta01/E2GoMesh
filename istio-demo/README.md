@@ -17,13 +17,13 @@
  - Downloads Istio version 1.0.6 for your platform  
  - Deploys Istio along with the default set of services like prometheus, grafana, etc  
  - Sets environment variables with all the URLs you need    
-  
-  
-
+ 
+ 
+```console
     git clone https://github.com/ishmee1/ServiceMesh.git  
     cd istio-demo  
     source provisionDemoCluster.sh
-
+```
   
   
   
@@ -32,7 +32,8 @@
   
 ## Deploying BookInfo  
   
-    
+```console
      kubectl apply -f istio-1.0.6/samples/bookinfo/platform/kube/bookinfo.yaml -n bookinfo 
      kubectl apply -f istio-1.0.6/samples/bookinfo/networking/bookinfo-gateway.yaml -n bookinfo 
      echo $APP_URL
+```
